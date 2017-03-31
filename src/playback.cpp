@@ -7,6 +7,6 @@ Playback::Playback(const char* name) {
 }
 
 int Playback::redraw(Mat image) {
-  imshow(this->name, image);
+  imshow(name, image);
   return 0;
 }

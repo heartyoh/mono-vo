@@ -2,7 +2,7 @@
 
 Plotter::Plotter() {
   namedWindow( "Trajectory", WINDOW_AUTOSIZE );
-  this->trajectory = Mat::zeros(600, 600, CV_8UC3);
+  trajectory = Mat::zeros(600, 600, CV_8UC3);
 }
 
 int Plotter::plot(double dx, double dy, double dz, double ox, double oy, double oz) {
@@ -20,16 +20,16 @@ int Plotter::plot(double dx, double dy, double dz, double ox, double oy, double 
   int xx = int(ox) + 300;
   int yy = int(oz) + 100;
 
-  circle(this->trajectory, Point(x, y) ,1, CV_RGB(255, 0, 0), 1);
-  circle(this->trajectory, Point(xx, yy) ,1, CV_RGB(0, 255, 0), 1);
+  circle(trajectory, Point(x, y) ,1, CV_RGB(255, 0, 0), 1);
+  circle(trajectory, Point(xx, yy) ,1, CV_RGB(0, 255, 0), 1);
 
-  rectangle(this->trajectory, Point(10, 30), Point(550, 70), CV_RGB(0,0,0), CV_FILLED);
+  rectangle(trajectory, Point(10, 30), Point(550, 70), CV_RGB(0,0,0), CV_FILLED);
   sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", dx, dy, dz);
-  putText(this->trajectory, text, textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
+  putText(trajectory, text, textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
   sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", ox, oy, oz);
-  putText(this->trajectory, text, textOrg1, fontFace, fontScale, Scalar::all(255), thickness, 8);
+  putText(trajectory, text, textOrg1, fontFace, fontScale, Scalar::all(255), thickness, 8);
 
-  imshow( "Trajectory", this->trajectory );
+  imshow( "Trajectory", trajectory );
 
   return 0;
 }

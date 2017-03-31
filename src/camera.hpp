@@ -2,7 +2,13 @@
 
 class Camera {
 
-  public:
-    int init();
+private:
+  char folder[100];
+  int seq;
+
+public:
+  int init();
+
+  int capture(Mat& image);
 
 };

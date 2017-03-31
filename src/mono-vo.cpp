@@ -1,6 +1,5 @@
 #include "mono-vo.h"
 
-#define MAX_FRAME 151
 #define MIN_NUM_FEAT 2000
 
 int main(int argc, char** argv)	{
@@ -17,12 +16,6 @@ int main(int argc, char** argv)	{
   camera->init();
 
   double scale = Params::getScale();
-
-  char filename1[200];
-  char filename2[200];
-
-  sprintf(filename1, "../data/01/images/%06d.png", 0);
-  sprintf(filename2, "../data/01/images/%06d.png", 1);
 
   //vectors to store the coordinates of the feature points
   vector<Point2f> points1, points2; 
@@ -50,8 +43,9 @@ int main(int argc, char** argv)	{
   double oz;
 
   //read the first two frames from the dataset
-  Mat img_1_c = imread(filename1);
-  Mat img_2_c = imread(filename2);
+  Mat img_1_c, img_2_c;
+  camera->capture(img_1_c);
+  camera->capture(img_2_c);
 
   if ( !img_1_c.data || !img_2_c.data ) { 
     cout<< " --(!) Error reading images " << endl; 
@@ -76,10 +70,9 @@ int main(int argc, char** argv)	{
   R_f = R.clone();
   t_f = t.clone();
 
-  for(int numFrame = 2;numFrame < MAX_FRAME;numFrame++)	{
-  	sprintf(filename, "../data/01/images/%06d.png", numFrame);
-
-  	currImage_color = imread(filename);
+  int numFrame;
+  while((numFrame = camera->capture(currImage_color)) >= 0) {
+    
   	cvtColor(currImage_color, currImage, COLOR_BGR2GRAY);
 
   	featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
