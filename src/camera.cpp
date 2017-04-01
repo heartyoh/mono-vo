@@ -12,7 +12,10 @@ double Camera::getFocal() {
   return 718.8560;
 }
 
-double Camera::getScaleFromDataset() {
+double Camera::getScale() {
+
+  if(seq < 3)
+    return 1.0;
 
   string line;
   int i = 0;
@@ -27,10 +30,10 @@ double Camera::getScaleFromDataset() {
     return -1;
   }
 
-  while(getline(fposes, line) && (i++ < seq - 2))
+  while(getline(fposes, line) && (i++ < seq - 3))
     ;
 
-  while(getline(fposes, line) && (i++ <= seq)) {
+  while(getline(fposes, line) && (i++ <= seq - 1)) {
 
     z_prev = z;
     x_prev = x;
@@ -48,10 +51,6 @@ double Camera::getScaleFromDataset() {
   fposes.close();
 
   return sqrt((x - x_prev)*(x - x_prev) + (y - y_prev)*(y - y_prev) + (z - z_prev)*(z - z_prev));
-}
-
-double Camera::getScale() {
-  return 1.0;
 }
 
 Point2d Camera::getPrinciplePoint() {
