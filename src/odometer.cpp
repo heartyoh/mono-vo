@@ -88,7 +88,6 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
 
   // 피쳐의 갯수가 작아지면, 다시 검출함.
   if(prevFeatures.size() < MIN_NUM_FEAT) {
-    cout << "다시 검출함." << "\n";
     featureDetection(prevImage, prevFeatures);
     featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
   }
