@@ -5,7 +5,7 @@ Plotter::Plotter() {
   trajectory = Mat::zeros(600, 600, CV_8UC3);
 }
 
-int Plotter::plot(double dx, double dy, double dz, double ox, double oy, double oz) {
+int Plotter::plot(double dx, double dy, double dz, Pose truth) {
 
   char text[100];
   Point textOrg(10, 50);
@@ -17,8 +17,8 @@ int Plotter::plot(double dx, double dy, double dz, double ox, double oy, double 
   int x = int(dx) + 300;
   int y = int(dz) + 100;
 
-  int xx = int(ox) + 300;
-  int yy = int(oz) + 100;
+  int xx = int(truth.x) + 300;
+  int yy = int(truth.z) + 100;
 
   circle(trajectory, Point(x, y) ,1, CV_RGB(255, 0, 0), 1);
   circle(trajectory, Point(xx, yy) ,1, CV_RGB(0, 255, 0), 1);
@@ -26,7 +26,7 @@ int Plotter::plot(double dx, double dy, double dz, double ox, double oy, double 
   rectangle(trajectory, Point(10, 30), Point(550, 70), CV_RGB(0,0,0), CV_FILLED);
   sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", dx, dy, dz);
   putText(trajectory, text, textOrg, fontFace, fontScale, Scalar::all(255), thickness, 8);
-  sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", ox, oy, oz);
+  sprintf(text, "Coordinates: x = %02fm y = %02fm z = %02fm", truth.x, truth.y, truth.z);
   putText(trajectory, text, textOrg1, fontFace, fontScale, Scalar::all(255), thickness, 8);
 
   imshow( "Trajectory", trajectory );

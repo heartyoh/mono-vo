@@ -11,4 +11,9 @@ public:
 
   int capture(Mat& image);
 
+  // parameters
+  double getFocal();
+  double getScale();
+  double getScaleFromDataset();
+  Point2d getPrinciplePoint();
 };

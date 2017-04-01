@@ -4,57 +4,43 @@
 
 int main(int argc, char** argv)	{
 
-  Params *params = new Params();
-  Camera *camera = new Camera();
-  Plotter *plotter = new Plotter();
-  Playback * playback = new Playback("Road facing camera");
-  Logger *logger = new Logger("results.txt");
+  Camera camera;
+  Plotter plotter;
+  Playback playback("Road facing camera");
+  Logger logger("results.txt");
 
-  Mat img_1, img_2;
-  Mat R_f, t_f; //the final rotation and tranlation vectors containing the 
+  //TODO: add a fucntion to load these values directly from KITTI's calib files
+  // WARNING: different sequences in the KITTI VO dataset have different intrinsic/extrinsic parameters
+  camera.init();
 
-  camera->init();
+  double focal = camera.getFocal();
+  double scale = camera.getScale();
+  Point2d pp = camera.getPrinciplePoint();
 
-  double scale = Params::getScale();
+  clock_t begin = clock();
 
   //vectors to store the coordinates of the feature points
   vector<Point2f> points1, points2; 
   vector<uchar> status;
 
-  clock_t begin = clock();
-
-  //TODO: add a fucntion to load these values directly from KITTI's calib files
-  // WARNING: different sequences in the KITTI VO dataset have different intrinsic/extrinsic parameters
-  double focal = 718.8560;
-  Point2d pp(607.1928, 185.2157);
-
-  char filename[100];
+  Mat img_1, img_2;
+  Mat R_f, t_f; //the final rotation and tranlation vectors containing the 
 
   Mat E, R, t, mask;
 
-  Mat currImage_color;
   Mat prevImage;
   Mat currImage;
   vector<Point2f> prevFeatures;
   vector<Point2f> currFeatures;
 
-  double ox;
-  double oy;
-  double oz;
-
   //read the first two frames from the dataset
-  Mat img_1_c, img_2_c;
-  camera->capture(img_1_c);
-  camera->capture(img_2_c);
+  camera.capture(img_1);
+  camera.capture(img_2);
 
-  if ( !img_1_c.data || !img_2_c.data ) { 
+  if (!img_1.data || !img_2.data) { 
     cout<< " --(!) Error reading images " << endl; 
     return -1;
   }
-
-  // we work with grayscale images
-  cvtColor(img_1_c, img_1, COLOR_BGR2GRAY);
-  cvtColor(img_2_c, img_2, COLOR_BGR2GRAY);
 
   // feature detection, tracking
   featureDetection(img_1, points1);
@@ -71,9 +57,7 @@ int main(int argc, char** argv)	{
   t_f = t.clone();
 
   int numFrame;
-  while((numFrame = camera->capture(currImage_color)) >= 0) {
-    
-  	cvtColor(currImage_color, currImage, COLOR_BGR2GRAY);
+  while((numFrame = camera.capture(currImage)) >= 0) {
 
   	featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
 
@@ -91,7 +75,7 @@ int main(int argc, char** argv)	{
   		currPts.at<double>(1, i) = currFeatures.at(i).y;
     }
 
-  	scale = Params::getScaleFromDataset(numFrame, 0, t.at<double>(2), &ox, &oy, &oz);
+  	scale = camera.getScaleFromDataset();
 
     if((scale > 0.1)
       &&(t.at<double>(2) > t.at<double>(0)) && (t.at<double>(2) > t.at<double>(1))) {
@@ -112,11 +96,14 @@ int main(int argc, char** argv)	{
     double dy = t_f.at<double>(1);
     double dz = t_f.at<double>(2);
 
-    logger->log(dx, dy, dz);
-    plotter->plot(dx, dy, dz, ox, oy, oz);
-    playback->redraw(currImage_color);
+    Pose truth;
+    Pose::get(truth, "../data/01/poses.txt", numFrame);
 
-    prevImage = currImage.clone();
+    logger.log(dx, dy, dz);
+    plotter.plot(dx, dy, dz, truth);
+    playback.redraw(currImage);
+
+    prevImage = currImage;
     prevFeatures = currFeatures;
 
     waitKey(1);
