@@ -17,6 +17,7 @@ int main(int argc, char** argv)	{
 
   int numFrame;
   Mat image;
+  Mat colorImage;
 
   while((numFrame = camera.capture(image)) >= 0) {
     double x, y, z;
@@ -28,7 +29,9 @@ int main(int argc, char** argv)	{
 
     logger.log(x, y, z);
     plotter.plot(x, y, z, truth);
-    playback.redraw(image);
+
+    cvtColor(image, colorImage, COLOR_GRAY2RGB);
+    playback.redraw(colorImage, odometer.getLastFeatures(), odometer.getCurrFeatures());
 
     waitKey(1);
   }

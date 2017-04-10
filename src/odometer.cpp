@@ -7,6 +7,14 @@ Odometer::Odometer(double focal, Point2d pp) {
   this->pp = pp;
 }
 
+vector<Point2f>& Odometer::getLastFeatures() {
+  return lastFeatures;
+}
+
+vector<Point2f>& Odometer::getCurrFeatures() {
+  return currFeatures;
+}
+
 void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) { 
 
   // 트래킹에 실패한 포인트들은 버린다.
@@ -97,6 +105,7 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
   z = t_f.at<double>(2);
 
   prevImage = currImage;
+  lastFeatures = prevFeatures;
   prevFeatures = currFeatures;
 
   return 0;
