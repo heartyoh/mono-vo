@@ -31,7 +31,7 @@ int main(int argc, char** argv)	{
     plotter.plot(x, y, z, truth);
 
     cvtColor(image, colorImage, COLOR_GRAY2RGB);
-    playback.redraw(colorImage, odometer.getLastFeatures(), odometer.getCurrFeatures());
+    playback.redraw(colorImage, odometer.getLastFeatures(), odometer.getCurrFeatures(), odometer.getR());
 
     waitKey(1);
   }

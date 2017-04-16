@@ -15,6 +15,10 @@ vector<Point2f>& Odometer::getCurrFeatures() {
   return currFeatures;
 }
 
+Mat& Odometer::getR() {
+  return R;
+}
+
 void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) { 
 
   // 트래킹에 실패한 포인트들은 버린다.
