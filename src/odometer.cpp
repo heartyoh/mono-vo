@@ -1,6 +1,6 @@
 #include "odometer.hpp"
 
-#define MIN_NUM_FEAT 2000
+#define MIN_NUM_FEAT 100
 
 Odometer::Odometer(double focal, Point2d pp) {
   this->focal = focal;
@@ -19,7 +19,7 @@ Mat& Odometer::getR() {
   return R_f;
 }
 
-void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) {
+int Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) {
 
   // 트래킹에 실패한 포인트들은 버린다.
   vector<float> err;
@@ -28,6 +28,7 @@ void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& pr
 
   calcOpticalFlowPyrLK(prevImage, currImage, prevFeatures, currFeatures, status, err, winSize, 3, termcrit, 0, 0.001);
 
+  double weight = 0;
   // KLT 트래킹에 실패하거나 프레임 바깥으로 벗어난 포인트들을 버린다.
   int indexCorrection = 0;
   for(int i = 0;i < status.size();i++) {
@@ -42,8 +43,13 @@ void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& pr
       currFeatures.erase (currFeatures.begin() + (i - indexCorrection));
 
       indexCorrection++;
+    } else {
+      Point2f before = prevFeatures.at(i - indexCorrection);
+      weight += (pt.x - before.x)*(pt.x - before.x) + (pt.y - before.y)*(pt.y - before.y);
     }
   }
+
+  return weight / prevFeatures.size();
 }
 
 void Odometer::featureDetection(Mat image, vector<Point2f>& features)  {
@@ -66,9 +72,16 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
     return 0;
   }
 
-  featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
+  int weight = featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
 
+  cout << "WEIGHT : " << weight << ", SIZE : " << prevFeatures.size() << endl;
+
+  if(weight < 100)
+    return 0;
+
+  Mat mask;
   E = findEssentialMat(currFeatures, prevFeatures, focal, pp, RANSAC, 0.999, 1.0, mask);
+  // correctMatches(E, currFeatures, prevFeatures, currFeatures, prevFeatures);
   recoverPose(E, currFeatures, prevFeatures, R, t, focal, pp, mask);
 
   Mat prevPts(2, prevFeatures.size(), CV_64F), currPts(2, currFeatures.size(), CV_64F);
@@ -85,18 +98,11 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
   if(R_f.empty()) {
     R_f = R.clone();
     t_f = t.clone();
-  }
-
-  // if(scale > 0.1
-  //   && (t.at<double>(2) > t.at<double>(0))
-  //   && (t.at<double>(2) > t.at<double>(1))
-  // ) {
-
-    t_f = t_f + scale * (R_f * t);
+  } else {
+    // t_f = t_f + scale * (R_f * t);
+    t_f = t_f + scale * (R * t);
     R_f = R * R_f;
-  // } else {
-  //   cout << "scale below 0.1, or incorrect translation" << endl;
-  // }
+  }
 
   // 피쳐의 갯수가 작아지면, 다시 검출함.
   if(prevFeatures.size() < MIN_NUM_FEAT) {

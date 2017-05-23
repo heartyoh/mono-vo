@@ -9,7 +9,7 @@ class Odometer {
 
   Mat R_f, t_f; //the final rotation and tranlation vectors containing the
 
-  Mat E, R, t, mask;
+  Mat E, R, t;
 
   Mat prevImage;
   vector<Point2f> lastFeatures;
@@ -21,7 +21,7 @@ public:
 
   int estimate(Mat image, double scale, double& x, double& y, double& z);
 
-  void featureTracking(Mat img_1, Mat img_2, vector<Point2f>& points1, vector<Point2f>& points2, vector<uchar>& status);
+  int featureTracking(Mat img_1, Mat img_2, vector<Point2f>& points1, vector<Point2f>& points2, vector<uchar>& status);
   void featureDetection(Mat img_1, vector<Point2f>& points1);
 
   vector<Point2f>& getLastFeatures();
