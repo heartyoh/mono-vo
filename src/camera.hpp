@@ -1,17 +1,17 @@
 #include "common.h"
 
 class Camera {
-
 private:
-  char folder[100];
+  VideoCapture camera;
+  Mat cameraFrame;
   int seq;
 
 public:
-  int init();
+  void init();
+  void init(int cameraNumber);
 
-  int capture(Mat& image);
+  int capture(Mat &image);
 
-  // parameters
   double getFocal();
   double getScale();
   Point2d getPrinciplePoint();

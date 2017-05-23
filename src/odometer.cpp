@@ -16,21 +16,21 @@ vector<Point2f>& Odometer::getCurrFeatures() {
 }
 
 Mat& Odometer::getR() {
-  return R;
+  return R_f;
 }
 
-void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) { 
+void Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, vector<uchar>& status) {
 
   // 트래킹에 실패한 포인트들은 버린다.
-  vector<float> err;          
-  Size winSize = Size(21,21);                                               
+  vector<float> err;
+  Size winSize = Size(21,21);
   TermCriteria termcrit = TermCriteria(TermCriteria::COUNT+TermCriteria::EPS, 30, 0.01);
 
   calcOpticalFlowPyrLK(prevImage, currImage, prevFeatures, currFeatures, status, err, winSize, 3, termcrit, 0, 0.001);
 
   // KLT 트래킹에 실패하거나 프레임 바깥으로 벗어난 포인트들을 버린다.
   int indexCorrection = 0;
-  for(int i = 0;i < status.size();i++) {  
+  for(int i = 0;i < status.size();i++) {
     Point2f pt = currFeatures.at(i - indexCorrection);
 
     if((status.at(i) == 0)||(pt.x < 0)||(pt.y < 0)) {
@@ -51,9 +51,9 @@ void Odometer::featureDetection(Mat image, vector<Point2f>& features)  {
   vector<KeyPoint> keypoints;
   int fast_threshold = 20;
   bool nonmaxSuppression = true;
- 
+
   FAST(image, keypoints, fast_threshold, nonmaxSuppression);
- 
+
   KeyPoint::convert(keypoints, features, vector<int>());
 }
 
@@ -87,16 +87,16 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
     t_f = t.clone();
   }
 
-  if(scale > 0.1 
-    && (t.at<double>(2) > t.at<double>(0)) 
-    && (t.at<double>(2) > t.at<double>(1))
-  ) {
+  // if(scale > 0.1
+  //   && (t.at<double>(2) > t.at<double>(0))
+  //   && (t.at<double>(2) > t.at<double>(1))
+  // ) {
 
     t_f = t_f + scale * (R_f * t);
     R_f = R * R_f;
-  } else {
-    cout << "scale below 0.1, or incorrect translation" << endl;
-  }
+  // } else {
+  //   cout << "scale below 0.1, or incorrect translation" << endl;
+  // }
 
   // 피쳐의 갯수가 작아지면, 다시 검출함.
   if(prevFeatures.size() < MIN_NUM_FEAT) {

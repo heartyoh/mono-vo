@@ -1,57 +1,76 @@
 #include "playback.hpp"
 
-Playback::Playback(const char* name) {
-  bzero(this->name, 100);
-  strncpy(this->name, name, strlen(name));
-  namedWindow(this->name, WINDOW_AUTOSIZE);
+#define MAX_FRAME 151
 
-  AXIS = Mat(3, 3, CV_64F);
-
-  AXIS.at<double>(0, 0) = 1;
-  AXIS.at<double>(1, 0) = 0;
-  AXIS.at<double>(2, 0) = 0;
-  
-  AXIS.at<double>(0, 1) = 0;
-  AXIS.at<double>(1, 1) = 1;
-  AXIS.at<double>(2, 1) = 0;
-  
-  AXIS.at<double>(0, 2) = 0;
-  AXIS.at<double>(1, 2) = 0;
-  AXIS.at<double>(2, 2) = 1;
-  
+int Playback::init() {
+  sprintf(folder, "../data/01/images");
+  seq = 0;
+  return 0;
 }
 
-int Playback::redraw(Mat image, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, Mat& R) {
+double Playback::getFocal() {
+  return 718.8560;
+}
 
-  if(prevFeatures.size() == currFeatures.size()) {
+double Playback::getScale() {
 
-    for(int i = 0;i < prevFeatures.size();i++) {
-      Point2f prev = prevFeatures.at(i);
-      Point2f curr = currFeatures.at(i);
-      
-      line(image, prev, curr, CV_RGB(0, 255, 0));
+  if(seq < 3)
+    return 1.0;
+
+  string line;
+  int i = 0;
+
+  ifstream fposes ("../data/01/poses.txt");
+
+  double x, y, z;
+  double x_prev, y_prev, z_prev;
+
+  if(!fposes.is_open()) {
+    cout << "Unable to open file";
+    return -1;
+  }
+
+  while(getline(fposes, line) && (i++ < seq - 3))
+    ;
+
+  while(getline(fposes, line) && (i++ <= seq - 1)) {
+
+    z_prev = z;
+    x_prev = x;
+    y_prev = y;
+
+    istringstream in(line);
+
+    for (int j=0; j<12; j++) {
+      in >> z ;
+      if (j==7) y=z;
+      if (j==3) x=z;
     }
   }
 
-  if(R.rows > 0 && R.cols > 0) {
-    
-    Point2f origin(600, 50);
+  fposes.close();
 
-    double *r = (double*)R.data;
+  return sqrt((x - x_prev)*(x - x_prev) + (y - y_prev)*(y - y_prev) + (z - z_prev)*(z - z_prev));
+}
 
-    AXIS = R * AXIS;
-    double *axis = (double*)AXIS.data;
+Point2d Playback::getPrinciplePoint() {
+  return Point2d(607.1928, 185.2157);
+}
 
-    Point2f xAxis(axis[0] * 100 + origin.x, axis[3] * 100 + origin.y);
-    Point2f yAxis(axis[1] * 100 + origin.x, axis[4] * 100 + origin.y);
-    Point2f zAxis(axis[2] * 100 + origin.x, axis[5] * 100 + origin.y);
+int Playback::capture(Mat& image) {
 
-    line(image, origin, xAxis, CV_RGB(255, 0, 0), 2);
-    line(image, origin, yAxis, CV_RGB(0, 255, 0), 2);
-    line(image, origin, zAxis, CV_RGB(0, 0, 255), 2);
-  }
+  if(seq >= MAX_FRAME)
+    return -1;
 
-  imshow(name, image);
+  char filename[200];
+  Mat grayImage;
 
-  return 0;
+  sprintf(filename, "%s/%06d.png", folder, seq);
+  Mat colorImage = imread(filename);
+
+  cvtColor(colorImage, grayImage, COLOR_BGR2GRAY);
+
+  image = grayImage;
+
+  return seq++;
 }

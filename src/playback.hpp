@@ -2,11 +2,17 @@
 
 class Playback {
 
-  char name[100];
-  Mat AXIS;
+private:
+  char folder[100];
+  int seq;
 
 public:
-  Playback(const char* name);
+  int init();
 
-  int redraw(Mat image, vector<Point2f>& prevFeatures, vector<Point2f>& currFeatures, Mat& R);
+  int capture(Mat& image);
+
+  // parameters
+  double getFocal();
+  double getScale();
+  Point2d getPrinciplePoint();
 };
