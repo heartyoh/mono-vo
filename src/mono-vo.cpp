@@ -9,7 +9,7 @@ int main(int argc, char** argv)	{
 
   //TODO: add a fucntion to load these values directly from KITTI's calib files
   // WARNING: different sequences in the KITTI VO dataset have different intrinsic/extrinsic parameters
-  camera.init();
+  camera.init(0);
 
   Odometer odometer(camera.getFocal(), camera.getPrinciplePoint());
 
@@ -24,8 +24,8 @@ int main(int argc, char** argv)	{
 
     try {
       odometer.estimate(image, camera.getScale(), x, y, z);
-    } catch(Exception e) {
-      cerr << "Exception occurred." << e.what() << endl;
+    } catch(...) {
+      cerr << "Exception occurred." << endl;
       odometer = Odometer(camera.getFocal(), camera.getPrinciplePoint());
       continue;
     }

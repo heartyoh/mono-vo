@@ -1,6 +1,6 @@
 #include "odometer.hpp"
 
-#define MIN_NUM_FEAT 100
+#define MIN_NUM_FEAT 500
 
 Odometer::Odometer(double focal, Point2d pp) {
   this->focal = focal;
@@ -8,7 +8,7 @@ Odometer::Odometer(double focal, Point2d pp) {
 }
 
 vector<Point2f>& Odometer::getLastFeatures() {
-  return lastFeatures;
+  return prevFeatures;
 }
 
 vector<Point2f>& Odometer::getCurrFeatures() {
@@ -49,6 +49,8 @@ int Odometer::featureTracking(Mat prevImage, Mat currImage, vector<Point2f>& pre
     }
   }
 
+  if(prevFeatures.size() == 0)
+    return 0;
   return weight / prevFeatures.size();
 }
 
@@ -70,14 +72,28 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
     featureDetection(prevImage, prevFeatures);
 
     return 0;
+  } else if(prevFeatures.size() < MIN_NUM_FEAT) {
+    // 피쳐의 갯수가 작아지면, 다시 검출함.
+    featureDetection(prevImage, prevFeatures);
+    // 피쳐를 전혀 찾지 못하면, 리셋함.
+    if(prevFeatures.size() <= 0) {
+      throw "can't detect features.";
+    }
   }
 
   int weight = featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
 
-  cout << "WEIGHT : " << weight << ", SIZE : " << prevFeatures.size() << endl;
+  cout << "WEIGHT : " << weight << ", SIZE : " << prevFeatures.size() << ", " << currFeatures.size() << endl;
 
-  if(weight < 100)
+  if(prevFeatures.size() <= 0) {
+    featureDetection(currImage, prevFeatures);
+    prevImage = currImage;
     return 0;
+  }
+
+  if(weight < 1000) {
+    return 0;
+  }
 
   Mat mask;
   E = findEssentialMat(currFeatures, prevFeatures, focal, pp, RANSAC, 0.999, 1.0, mask);
@@ -99,15 +115,9 @@ int Odometer::estimate(Mat currImage, double scale, double& x, double& y, double
     R_f = R.clone();
     t_f = t.clone();
   } else {
-    // t_f = t_f + scale * (R_f * t);
-    t_f = t_f + scale * (R * t);
+    t_f = t_f + scale * (R_f * t);
+    // t_f = t_f + scale * (R * t);
     R_f = R * R_f;
-  }
-
-  // 피쳐의 갯수가 작아지면, 다시 검출함.
-  if(prevFeatures.size() < MIN_NUM_FEAT) {
-    featureDetection(prevImage, prevFeatures);
-    featureTracking(prevImage, currImage, prevFeatures, currFeatures, status);
   }
 
   x = t_f.at<double>(0);

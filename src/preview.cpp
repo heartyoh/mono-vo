@@ -20,6 +20,8 @@ int Preview::redraw(Mat image, vector<Point2f>& prevFeatures, vector<Point2f>& c
 
       line(image, prev, curr, CV_RGB(0, 255, 0));
     }
+  } else {
+    // cout << prevFeatures.size() << "," << currFeatures.size() << endl;
   }
 
   if(R.rows > 0 && R.cols > 0) {
